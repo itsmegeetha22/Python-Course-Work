@@ -1,0 +1,230 @@
+# ==========================================
+# utils.py
+# ==========================================
+
+import os
+from datetime import datetime
+from tkinter import messagebox
+
+# ==========================================
+# Validate Number
+# ==========================================
+
+def is_number(value):
+    """
+    Check whether the given value is a valid number.
+    """
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
+# ==========================================
+# Validate Integer
+# ==========================================
+
+def is_integer(value):
+    """
+    Check whether the given value is a valid integer.
+    """
+    try:
+        int(value)
+        return True
+    except ValueError:
+        return False
+
+
+# ==========================================
+# Validate Empty Field
+# ==========================================
+
+def is_empty(value):
+    """
+    Returns True if the field is empty.
+    """
+    return value.strip() == ""
+
+
+# ==========================================
+# Current Date
+# ==========================================
+
+def current_date():
+    """
+    Returns current date.
+    """
+    return datetime.now().strftime("%d-%m-%Y")
+
+
+# ==========================================
+# Current Time
+# ==========================================
+
+def current_time():
+    """
+    Returns current time.
+    """
+    return datetime.now().strftime("%H:%M:%S")
+
+
+# ==========================================
+# Current Date and Time
+# ==========================================
+
+def current_datetime():
+    """
+    Returns current date and time.
+    """
+    return datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+
+
+# ==========================================
+# Create Folder
+# ==========================================
+
+def create_folder(folder_name):
+    """
+    Create folder if it doesn't exist.
+    """
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+
+# ==========================================
+# Success Message
+# ==========================================
+
+def success(message):
+    """
+    Show success message.
+    """
+    messagebox.showinfo("Success", message)
+
+
+# ==========================================
+# Error Message
+# ==========================================
+
+def error(message):
+    """
+    Show error message.
+    """
+    messagebox.showerror("Error", message)
+
+
+# ==========================================
+# Warning Message
+# ==========================================
+
+def warning(message):
+    """
+    Show warning message.
+    """
+    messagebox.showwarning("Warning", message)
+
+
+# ==========================================
+# Confirm Delete
+# ==========================================
+
+def confirm_delete():
+    """
+    Ask confirmation before deleting.
+    """
+    return messagebox.askyesno(
+        "Confirm",
+        "Are you sure you want to delete this record?"
+    )
+
+
+# ==========================================
+# Validate Contact Number
+# ==========================================
+
+def valid_contact(contact):
+    """
+    Validate a 10-digit mobile number.
+    """
+    return contact.isdigit() and len(contact) == 10
+
+
+# ==========================================
+# Validate Age
+# ==========================================
+
+def valid_age(age):
+    """
+    Validate pet age.
+    """
+    if not is_integer(age):
+        return False
+
+    age = int(age)
+
+    return 0 <= age <= 40
+
+
+# ==========================================
+# Validate Weight
+# ==========================================
+
+def valid_weight(weight):
+    """
+    Validate pet weight.
+    """
+    if not is_number(weight):
+        return False
+
+    weight = float(weight)
+
+    return 0 < weight <= 200
+
+
+# ==========================================
+# Calculate BMI (Optional)
+# ==========================================
+
+def calculate_bmi(weight, height):
+
+    try:
+
+        weight = float(weight)
+        height = float(height)
+
+        if height == 0:
+            return 0
+
+        return round(weight / (height ** 2), 2)
+
+    except:
+        return 0
+
+
+# ==========================================
+# Format Name
+# ==========================================
+
+def format_name(name):
+    """
+    Convert name to title case.
+    """
+    return name.strip().title()
+
+
+# ==========================================
+# Test Utility Functions
+# ==========================================
+
+if __name__ == "__main__":
+
+    print("Current Date :", current_date())
+    print("Current Time :", current_time())
+    print("Current DateTime :", current_datetime())
+
+    print("Age Valid :", valid_age("5"))
+    print("Weight Valid :", valid_weight("18.5"))
+    print("Contact Valid :", valid_contact("9876543210"))
+
+    print("BMI :", calculate_bmi(20, 1.2))

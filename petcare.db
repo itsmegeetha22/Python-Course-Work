@@ -1,0 +1,208 @@
+# ==========================================
+# owner.py
+# Pet Owner Management Module
+# ==========================================
+
+import sqlite3
+
+DB_NAME = "petcare.db"
+
+
+def connect_db():
+    return sqlite3.connect(DB_NAME)
+
+
+# ------------------------------------------
+# Add Owner
+# ------------------------------------------
+def add_owner():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    print("\n===== Add New Owner =====")
+
+    owner_id = input("Owner ID: ")
+    name = input("Owner Name: ")
+    phone = input("Phone Number: ")
+    email = input("Email: ")
+    address = input("Address: ")
+
+    try:
+        cursor.execute("""
+            INSERT INTO owners
+            (owner_id, name, phone, email, address)
+            VALUES (?, ?, ?, ?, ?)
+        """, (owner_id, name, phone, email, address))
+
+        conn.commit()
+        print("\nOwner added successfully.")
+
+    except sqlite3.IntegrityError:
+        print("\nOwner ID already exists.")
+
+    finally:
+        conn.close()
+
+
+# ------------------------------------------
+# View Owners
+# ------------------------------------------
+def view_owners():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM owners")
+    owners = cursor.fetchall()
+
+    print("\n========== OWNER LIST ==========")
+
+    if not owners:
+        print("No owner records found.")
+    else:
+        for owner in owners:
+            print("-----------------------------------")
+            print("Owner ID :", owner[0])
+            print("Name     :", owner[1])
+            print("Phone    :", owner[2])
+            print("Email    :", owner[3])
+            print("Address  :", owner[4])
+
+    conn.close()
+
+
+# ------------------------------------------
+# Search Owner
+# ------------------------------------------
+def search_owner():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    owner_id = input("\nEnter Owner ID: ")
+
+    cursor.execute(
+        "SELECT * FROM owners WHERE owner_id=?",
+        (owner_id,)
+    )
+
+    owner = cursor.fetchone()
+
+    if owner:
+        print("\nOwner Found")
+        print("---------------------------")
+        print("Owner ID :", owner[0])
+        print("Name     :", owner[1])
+        print("Phone    :", owner[2])
+        print("Email    :", owner[3])
+        print("Address  :", owner[4])
+    else:
+        print("\nOwner not found.")
+
+    conn.close()
+
+
+# ------------------------------------------
+# Update Owner
+# ------------------------------------------
+def update_owner():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    owner_id = input("Enter Owner ID: ")
+
+    cursor.execute(
+        "SELECT * FROM owners WHERE owner_id=?",
+        (owner_id,)
+    )
+
+    owner = cursor.fetchone()
+
+    if not owner:
+        print("Owner not found.")
+        conn.close()
+        return
+
+    print("\nLeave blank to keep existing value.")
+
+    name = input(f"Name ({owner[1]}): ") or owner[1]
+    phone = input(f"Phone ({owner[2]}): ") or owner[2]
+    email = input(f"Email ({owner[3]}): ") or owner[3]
+    address = input(f"Address ({owner[4]}): ") or owner[4]
+
+    cursor.execute("""
+        UPDATE owners
+        SET
+            name=?,
+            phone=?,
+            email=?,
+            address=?
+        WHERE owner_id=?
+    """, (name, phone, email, address, owner_id))
+
+    conn.commit()
+    conn.close()
+
+    print("\nOwner updated successfully.")
+
+
+# ------------------------------------------
+# Delete Owner
+# ------------------------------------------
+def delete_owner():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    owner_id = input("Enter Owner ID: ")
+
+    cursor.execute(
+        "SELECT * FROM owners WHERE owner_id=?",
+        (owner_id,)
+    )
+
+    owner = cursor.fetchone()
+
+    if not owner:
+        print("Owner not found.")
+        conn.close()
+        return
+
+    cursor.execute(
+        "DELETE FROM owners WHERE owner_id=?",
+        (owner_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    print("\nOwner deleted successfully.")
+
+
+# ------------------------------------------
+# View Pets of an Owner
+# ------------------------------------------
+def owner_pets():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    owner_name = input("Enter Owner Name: ")
+
+    cursor.execute("""
+        SELECT pet_id, name, breed, age
+        FROM pets
+        WHERE owner=?
+    """, (owner_name,))
+
+    pets = cursor.fetchall()
+
+    print("\n====== Pets ======")
+
+    if not pets:
+        print("No pets found for this owner.")
+    else:
+        for pet in pets:
+            print("---------------------------")
+            print("Pet ID :", pet[0])
+            print("Name   :", pet[1])
+            print("Breed  :", pet[2])
+            print("Age    :", pet[3])
+
+    conn.close()

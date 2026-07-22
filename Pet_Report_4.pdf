@@ -1,0 +1,423 @@
+# ==========================================
+# reminder.py (Part 1)
+# ==========================================
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+import database
+
+
+class ReminderWindow:
+
+    def __init__(self, root):
+
+        self.root = tk.Toplevel(root)
+        self.root.title("Pet Reminder")
+        self.root.geometry("1200x650")
+        self.root.configure(bg="white")
+
+        database.connect_db()
+
+        # ================= Variables =================
+
+        self.reminder_id = tk.StringVar()
+        self.pet_id = tk.StringVar()
+        self.reminder_type = tk.StringVar()
+        self.reminder_date = tk.StringVar()
+        self.description = tk.StringVar()
+
+        # ================= Title =================
+
+        title = tk.Label(
+            self.root,
+            text="Pet Reminder",
+            font=("Arial", 22, "bold"),
+            bg="#673AB7",
+            fg="white",
+            pady=10
+        )
+
+        title.pack(fill="x")
+
+        # ================= Left Frame =================
+
+        left = tk.Frame(
+            self.root,
+            bg="white",
+            bd=2,
+            relief="ridge"
+        )
+
+        left.place(x=10, y=60, width=350, height=560)
+
+        tk.Label(left, text="Pet ID", bg="white",
+                 font=("Arial", 11, "bold")).grid(row=0,column=0,padx=10,pady=10,sticky="w")
+
+        tk.Entry(left,textvariable=self.pet_id,width=25).grid(row=0,column=1)
+
+        tk.Label(left,text="Reminder Type",
+                 bg="white",
+                 font=("Arial",11,"bold")).grid(row=1,column=0,padx=10,pady=10,sticky="w")
+
+        ttk.Combobox(
+
+            left,
+
+            textvariable=self.reminder_type,
+
+            values=[
+                "Vaccination",
+                "Medicine",
+                "Feeding",
+                "Vet Appointment",
+                "Grooming"
+            ],
+
+            state="readonly",
+
+            width=22
+
+        ).grid(row=1,column=1)
+
+        tk.Label(left,text="Reminder Date",
+                 bg="white",
+                 font=("Arial",11,"bold")).grid(row=2,column=0,padx=10,pady=10,sticky="w")
+
+        tk.Entry(left,
+                 textvariable=self.reminder_date,
+                 width=25).grid(row=2,column=1)
+
+        tk.Label(left,text="Description",
+                 bg="white",
+                 font=("Arial",11,"bold")).grid(row=3,column=0,padx=10,pady=10,sticky="w")
+
+        tk.Entry(left,
+                 textvariable=self.description,
+                 width=25).grid(row=3,column=1)
+
+        # ================= Buttons =================
+
+        btn = tk.Frame(left,bg="white")
+        btn.grid(row=5,columnspan=2,pady=25)
+
+        tk.Button(
+            btn,
+            text="Add",
+            width=10,
+            bg="green",
+            fg="white",
+            command=self.add_reminder
+        ).grid(row=0,column=0,padx=5,pady=5)
+
+        tk.Button(
+            btn,
+            text="Update",
+            width=10,
+            bg="blue",
+            fg="white",
+            command=self.update_reminder
+        ).grid(row=0,column=1,padx=5,pady=5)
+
+        tk.Button(
+            btn,
+            text="Delete",
+            width=10,
+            bg="red",
+            fg="white",
+            command=self.delete_reminder
+        ).grid(row=1,column=0,padx=5,pady=5)
+
+        tk.Button(
+            btn,
+            text="Search",
+            width=10,
+            bg="orange",
+            fg="white",
+            command=self.search_reminder
+        ).grid(row=1,column=1,padx=5,pady=5)
+
+        tk.Button(
+            btn,
+            text="View All",
+            width=10,
+            bg="#009688",
+            fg="white",
+            command=self.fetch_data
+        ).grid(row=2,column=0,padx=5,pady=5)
+
+        tk.Button(
+            btn,
+            text="Clear",
+            width=10,
+            bg="gray",
+            fg="white",
+            command=self.clear
+        ).grid(row=2,column=1,padx=5,pady=5)
+
+        # ================= Right Frame =================
+
+        right = tk.Frame(
+            self.root,
+            bg="white",
+            bd=2,
+            relief="ridge"
+        )
+
+        right.place(x=370,y=60,width=810,height=560)
+
+        sx = tk.Scrollbar(right,orient="horizontal")
+        sy = tk.Scrollbar(right,orient="vertical")
+
+        self.table = ttk.Treeview(
+
+            right,
+
+            columns=(
+
+                "id",
+                "petid",
+                "type",
+                "date",
+                "description"
+
+            ),
+
+            xscrollcommand=sx.set,
+            yscrollcommand=sy.set
+
+        )
+
+        sx.pack(side="bottom",fill="x")
+        sy.pack(side="right",fill="y")
+
+        sx.config(command=self.table.xview)
+        sy.config(command=self.table.yview)
+
+        self.table.heading("id",text="Reminder ID")
+        self.table.heading("petid",text="Pet ID")
+        self.table.heading("type",text="Reminder Type")
+        self.table.heading("date",text="Reminder Date")
+        self.table.heading("description",text="Description")
+
+        self.table["show"]="headings"
+
+        self.table.column("id",width=100)
+        self.table.column("petid",width=100)
+        self.table.column("type",width=180)
+        self.table.column("date",width=150)
+        self.table.column("description",width=250)
+
+        self.table.pack(fill="both",expand=True)
+
+        self.table.bind("<ButtonRelease-1>",self.get_cursor)
+
+        self.fetch_data()
+
+    # ===============================
+    # Add Reminder
+    # ===============================
+
+    def add_reminder(self):
+
+        if self.pet_id.get()=="":
+
+            messagebox.showerror(
+                "Error",
+                "Pet ID is Required."
+            )
+            return
+
+        database.add_reminder(
+
+            self.pet_id.get(),
+            self.reminder_type.get(),
+            self.reminder_date.get(),
+            self.description.get()
+
+        )
+
+        self.fetch_data()
+        self.clear()
+
+        messagebox.showinfo(
+            "Success",
+            "Reminder Added Successfully."
+        )
+
+    # ===================================
+    # View All Reminders
+    # ===================================
+
+    def fetch_data(self):
+
+        rows = database.get_reminders()
+
+        self.table.delete(*self.table.get_children())
+
+        for row in rows:
+            self.table.insert("", tk.END, values=row)
+
+    # ===================================
+    # Get Selected Row
+    # ===================================
+
+    def get_cursor(self, event=""):
+
+        cursor_row = self.table.focus()
+
+        contents = self.table.item(cursor_row)
+
+        row = contents.get("values")
+
+        if not row:
+            return
+
+        self.reminder_id.set(row[0])
+        self.pet_id.set(row[1])
+        self.reminder_type.set(row[2])
+        self.reminder_date.set(row[3])
+        self.description.set(row[4])
+
+    # ===================================
+    # Update Reminder
+    # ===================================
+
+    def update_reminder(self):
+
+        if self.reminder_id.get() == "":
+
+            messagebox.showerror(
+                "Error",
+                "Please select a reminder."
+            )
+            return
+
+        conn = database.connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE reminder
+            SET
+                pet_id=?,
+                reminder_type=?,
+                reminder_date=?,
+                description=?
+            WHERE reminder_id=?
+        """,
+        (
+            self.pet_id.get(),
+            self.reminder_type.get(),
+            self.reminder_date.get(),
+            self.description.get(),
+            self.reminder_id.get()
+        ))
+
+        conn.commit()
+        conn.close()
+
+        self.fetch_data()
+        self.clear()
+
+        messagebox.showinfo(
+            "Success",
+            "Reminder Updated Successfully."
+        )
+
+    # ===================================
+    # Delete Reminder
+    # ===================================
+
+    def delete_reminder(self):
+
+        if self.reminder_id.get() == "":
+
+            messagebox.showerror(
+                "Error",
+                "Please select a reminder."
+            )
+            return
+
+        answer = messagebox.askyesno(
+            "Delete",
+            "Are you sure you want to delete this reminder?"
+        )
+
+        if answer:
+
+            conn = database.connect_db()
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "DELETE FROM reminder WHERE reminder_id=?",
+                (self.reminder_id.get(),)
+            )
+
+            conn.commit()
+            conn.close()
+
+            self.fetch_data()
+            self.clear()
+
+            messagebox.showinfo(
+                "Deleted",
+                "Reminder Deleted Successfully."
+            )
+
+    # ===================================
+    # Search Reminder
+    # ===================================
+
+    def search_reminder(self):
+
+        keyword = self.pet_id.get().strip()
+
+        conn = database.connect_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM reminder WHERE pet_id LIKE ?",
+            ('%' + keyword + '%',)
+        )
+
+        rows = cursor.fetchall()
+
+        conn.close()
+
+        self.table.delete(*self.table.get_children())
+
+        for row in rows:
+            self.table.insert("", tk.END, values=row)
+
+    # ===================================
+    # Clear Fields
+    # ===================================
+
+    def clear(self):
+
+        self.reminder_id.set("")
+        self.pet_id.set("")
+        self.reminder_type.set("")
+        self.reminder_date.set("")
+        self.description.set("")
+
+# ===================================
+# Open Reminder Window
+# ===================================
+
+def open_reminder_window(root):
+
+    ReminderWindow(root)
+
+
+# ===================================
+# Run This File Directly
+# ===================================
+
+if __name__ == "__main__":
+
+    root = tk.Tk()
+    root.withdraw()
+
+    ReminderWindow(root)
+
+    root.mainloop()

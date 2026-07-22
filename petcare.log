@@ -1,0 +1,207 @@
+# ==========================================
+# logger.py
+# ==========================================
+
+import logging
+import os
+from datetime import datetime
+
+# ==========================================
+# Create Logs Folder
+# ==========================================
+
+LOG_FOLDER = "logs"
+
+if not os.path.exists(LOG_FOLDER):
+    os.makedirs(LOG_FOLDER)
+
+# ==========================================
+# Log File
+# ==========================================
+
+LOG_FILE = os.path.join(LOG_FOLDER, "petcare.log")
+
+# ==========================================
+# Configure Logger
+# ==========================================
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%d-%m-%Y %H:%M:%S"
+)
+
+# ==========================================
+# Log Functions
+# ==========================================
+
+def log_info(message):
+    """
+    Log Information
+    """
+    logging.info(message)
+
+
+def log_warning(message):
+    """
+    Log Warning
+    """
+    logging.warning(message)
+
+
+def log_error(message):
+    """
+    Log Error
+    """
+    logging.error(message)
+
+
+def log_exception(message):
+    """
+    Log Exception
+    """
+    logging.exception(message)
+
+
+# ==========================================
+# Pet Logs
+# ==========================================
+
+def log_pet_added(name):
+    logging.info(f"Pet Added : {name}")
+
+
+def log_pet_updated(name):
+    logging.info(f"Pet Updated : {name}")
+
+
+def log_pet_deleted(name):
+    logging.info(f"Pet Deleted : {name}")
+
+
+# ==========================================
+# Medical Logs
+# ==========================================
+
+def log_medical_added(pet_id):
+    logging.info(f"Medical Record Added for Pet ID : {pet_id}")
+
+
+def log_medical_updated(pet_id):
+    logging.info(f"Medical Record Updated for Pet ID : {pet_id}")
+
+
+def log_medical_deleted(pet_id):
+    logging.info(f"Medical Record Deleted for Pet ID : {pet_id}")
+
+
+# ==========================================
+# Nutrition Logs
+# ==========================================
+
+def log_nutrition_added(pet_id):
+    logging.info(f"Nutrition Record Added for Pet ID : {pet_id}")
+
+
+def log_nutrition_updated(pet_id):
+    logging.info(f"Nutrition Record Updated for Pet ID : {pet_id}")
+
+
+def log_nutrition_deleted(pet_id):
+    logging.info(f"Nutrition Record Deleted for Pet ID : {pet_id}")
+
+
+# ==========================================
+# Activity Logs
+# ==========================================
+
+def log_activity_added(pet_id):
+    logging.info(f"Activity Added for Pet ID : {pet_id}")
+
+
+def log_activity_updated(pet_id):
+    logging.info(f"Activity Updated for Pet ID : {pet_id}")
+
+
+def log_activity_deleted(pet_id):
+    logging.info(f"Activity Deleted for Pet ID : {pet_id}")
+
+
+# ==========================================
+# Reminder Logs
+# ==========================================
+
+def log_reminder_added(pet_id):
+    logging.info(f"Reminder Added for Pet ID : {pet_id}")
+
+
+def log_reminder_updated(pet_id):
+    logging.info(f"Reminder Updated for Pet ID : {pet_id}")
+
+
+def log_reminder_deleted(pet_id):
+    logging.info(f"Reminder Deleted for Pet ID : {pet_id}")
+
+
+# ==========================================
+# Health Analysis Logs
+# ==========================================
+
+def log_health_analysis(pet_id, score):
+    logging.info(
+        f"Health Analysis Generated | Pet ID : {pet_id} | Score : {score}"
+    )
+
+
+# ==========================================
+# Report Logs
+# ==========================================
+
+def log_pdf_generated(filename):
+    logging.info(f"PDF Report Generated : {filename}")
+
+
+def log_txt_generated(filename):
+    logging.info(f"TXT Report Generated : {filename}")
+
+
+# ==========================================
+# Application Logs
+# ==========================================
+
+def application_started():
+    logging.info("=" * 60)
+    logging.info("PetCareAI Application Started")
+
+
+def application_closed():
+    logging.info("PetCareAI Application Closed")
+    logging.info("=" * 60)
+
+
+# ==========================================
+# Test Logger
+# ==========================================
+
+if __name__ == "__main__":
+
+    application_started()
+
+    log_info("Application Running")
+
+    log_pet_added("Buddy")
+
+    log_activity_added(101)
+
+    log_health_analysis(101, 95)
+
+    log_pdf_generated("Pet_Report_101.pdf")
+
+    log_warning("This is a warning.")
+
+    log_error("Sample error.")
+
+    application_closed()
+
+    print("Log file created successfully.")

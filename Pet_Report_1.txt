@@ -1,0 +1,404 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+import database
+
+# -----------------------------
+# Pet Management Window
+# -----------------------------
+class PetWindow:
+
+    def __init__(self, root):
+
+        self.root = tk.Toplevel(root)
+        self.root.title("Pet Management")
+        self.root.geometry("1150x650")
+        self.root.configure(bg="white")
+
+        database.connect_db()
+
+        # ==========================
+        # Variables
+        # ==========================
+        self.pet_id = tk.StringVar()
+        self.name = tk.StringVar()
+        self.species = tk.StringVar()
+        self.breed = tk.StringVar()
+        self.age = tk.StringVar()
+        self.gender = tk.StringVar()
+        self.weight = tk.StringVar()
+        self.owner = tk.StringVar()
+        self.contact = tk.StringVar()
+
+        title = tk.Label(
+            self.root,
+            text="Pet Management",
+            bg="#2196F3",
+            fg="white",
+            font=("Arial",22,"bold"),
+            pady=10
+        )
+
+        title.pack(fill="x")
+
+        # ==========================
+        # Left Frame
+        # ==========================
+
+        left = tk.Frame(
+            self.root,
+            bg="white",
+            bd=2,
+            relief="ridge"
+        )
+
+        left.place(x=10,y=60,width=350,height=560)
+
+        fields = [
+            ("Pet Name",self.name),
+            ("Species",self.species),
+            ("Breed",self.breed),
+            ("Age",self.age),
+            ("Gender",self.gender),
+            ("Weight",self.weight),
+            ("Owner",self.owner),
+            ("Contact",self.contact)
+        ]
+
+        row = 0
+
+        for text,var in fields:
+
+            tk.Label(
+                left,
+                text=text,
+                bg="white",
+                font=("Arial",11,"bold")
+            ).grid(row=row,column=0,padx=10,pady=10,sticky="w")
+
+            if text=="Gender":
+
+                ttk.Combobox(
+                    left,
+                    textvariable=var,
+                    values=["Male","Female"],
+                    state="readonly",
+                    width=22
+                ).grid(row=row,column=1,padx=5)
+
+            else:
+
+                tk.Entry(
+                    left,
+                    textvariable=var,
+                    width=25
+                ).grid(row=row,column=1,padx=5)
+
+            row += 1
+
+        # ==========================
+        # Buttons
+        # ==========================
+
+        btn_frame = tk.Frame(left,bg="white")
+        btn_frame.grid(row=9,columnspan=2,pady=20)
+
+        tk.Button(
+            btn_frame,
+            text="Add",
+            bg="green",
+            fg="white",
+            width=10,
+            command=self.add_pet
+        ).grid(row=0,column=0,padx=5)
+
+
+        tk.Button(
+            btn_frame,
+            text="Update",
+            bg="blue",
+            fg="white",
+            width=10,
+            command=self.update_pet
+        ).grid(row=0, column=1, padx=5, pady=5)
+
+        tk.Button(
+            btn_frame,
+            text="Delete",
+            bg="red",
+            fg="white",
+            width=10,
+            command=self.delete_pet
+        ).grid(row=1, column=0, padx=5, pady=5)
+
+
+        tk.Button(
+            btn_frame,
+            text="Search",
+            bg="orange",
+            fg="white",
+            width=10,
+            command=self.search_pet
+        ).grid(row=1, column=1, padx=5, pady=5)
+
+        tk.Button(
+            btn_frame,
+            text="Clear",
+            bg="gray",
+            fg="white",
+            width=10,
+            command=self.clear
+        ).grid(row=2, column=0, columnspan=2, padx=5, pady=5)
+
+        # ==========================
+        # Right Frame
+        # ==========================
+
+        right = tk.Frame(
+            self.root,
+            bd=2,
+            relief="ridge",
+            bg="white"
+        )
+
+        right.place(x=370,y=60,width=760,height=560)
+
+        scroll_x = tk.Scrollbar(right,orient="horizontal")
+        scroll_y = tk.Scrollbar(right,orient="vertical")
+
+        self.table = ttk.Treeview(
+            right,
+            columns=(
+                "id",
+                "name",
+                "species",
+                "breed",
+                "age",
+                "gender",
+                "weight",
+                "owner",
+                "contact"
+            ),
+            xscrollcommand=scroll_x.set,
+            yscrollcommand=scroll_y.set
+        )
+
+        scroll_x.pack(side="bottom",fill="x")
+        scroll_y.pack(side="right",fill="y")
+
+        scroll_x.config(command=self.table.xview)
+        scroll_y.config(command=self.table.yview)
+
+        self.table.heading("id",text="ID")
+        self.table.heading("name",text="Name")
+        self.table.heading("species",text="Species")
+        self.table.heading("breed",text="Breed")
+        self.table.heading("age",text="Age")
+        self.table.heading("gender",text="Gender")
+        self.table.heading("weight",text="Weight")
+        self.table.heading("owner",text="Owner")
+        self.table.heading("contact",text="Contact")
+
+        self.table["show"]="headings"
+
+        self.table.column("id",width=60)
+        self.table.column("name",width=120)
+        self.table.column("species",width=120)
+        self.table.column("breed",width=120)
+        self.table.column("age",width=80)
+        self.table.column("gender",width=80)
+        self.table.column("weight",width=80)
+        self.table.column("owner",width=120)
+        self.table.column("contact",width=120)
+
+        self.table.pack(fill="both",expand=1)
+
+        self.table.bind("<ButtonRelease-1>",self.get_cursor)
+
+        self.fetch_data()
+
+    # ==========================
+    # Add Pet
+    # ==========================
+
+    def add_pet(self):
+
+        if self.name.get()=="" or self.species.get()=="":
+
+            messagebox.showerror(
+                "Error",
+                "Pet Name and Species are required."
+            )
+            return
+
+        database.add_pet(
+            self.name.get(),
+            self.species.get(),
+            self.breed.get(),
+            self.age.get(),
+            self.gender.get(),
+            self.weight.get(),
+            self.owner.get(),
+            self.contact.get()
+        )
+
+        self.fetch_data()
+        self.clear()
+
+        messagebox.showinfo(
+            "Success",
+            "Pet Added Successfully."
+        )
+
+    # ==========================
+    # Fetch Data
+    # ==========================
+    def fetch_data(self):
+
+        rows = database.get_all_pets()
+
+        self.table.delete(*self.table.get_children())
+
+        for row in rows:
+            self.table.insert("", tk.END, values=row)
+
+    # ==========================
+    # Get Selected Row
+    # ==========================
+    def get_cursor(self, event=""):
+
+        cursor_row = self.table.focus()
+
+        contents = self.table.item(cursor_row)
+
+        row = contents.get("values")
+
+        if not row:
+            return
+
+        self.pet_id.set(row[0])
+        self.name.set(row[1])
+        self.species.set(row[2])
+        self.breed.set(row[3])
+        self.age.set(row[4])
+        self.gender.set(row[5])
+        self.weight.set(row[6])
+        self.owner.set(row[7])
+        self.contact.set(row[8])
+
+    # ==========================
+    # Update Pet
+    # ==========================
+    def update_pet(self):
+
+        if self.pet_id.get() == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a pet."
+            )
+            return
+
+        database.update_pet(
+            self.pet_id.get(),
+            self.name.get(),
+            self.species.get(),
+            self.breed.get(),
+            self.age.get(),
+            self.gender.get(),
+            self.weight.get(),
+            self.owner.get(),
+            self.contact.get()
+        )
+
+        self.fetch_data()
+        self.clear()
+
+        messagebox.showinfo(
+            "Success",
+            "Pet Updated Successfully."
+        )
+
+    # ==========================
+    # Delete Pet
+    # ==========================
+    def delete_pet(self):
+
+        if self.pet_id.get() == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a pet."
+            )
+            return
+
+        answer = messagebox.askyesno(
+            "Delete",
+            "Are you sure you want to delete this pet?"
+        )
+
+        if answer:
+
+            database.delete_pet(
+                self.pet_id.get()
+            )
+
+            self.fetch_data()
+            self.clear()
+
+            messagebox.showinfo(
+                "Deleted",
+                "Pet Deleted Successfully."
+            )
+
+    # ==========================
+    # Search Pet
+    # ==========================
+    def search_pet(self):
+
+        keyword = self.name.get().strip().lower()
+
+        rows = database.get_all_pets()
+
+        self.table.delete(*self.table.get_children())
+
+        for row in rows:
+
+            if keyword in str(row[1]).lower():
+
+                self.table.insert(
+                    "",
+                    tk.END,
+                    values=row
+                )
+
+    # ==========================
+    # Clear Fields
+    # ==========================
+    def clear(self):
+
+        self.pet_id.set("")
+        self.name.set("")
+        self.species.set("")
+        self.breed.set("")
+        self.age.set("")
+        self.gender.set("")
+        self.weight.set("")
+        self.owner.set("")
+        self.contact.set("")
+
+    # ==========================
+    # Refresh Table
+    # ==========================
+    def refresh(self):
+
+        self.fetch_data()
+        self.clear()
+
+
+
+
+# ======================================
+# Function Called from main.py
+# ======================================
+
+def open_pet_window(root):
+
+    PetWindow(root)

@@ -1,0 +1,262 @@
+# ==========================================
+# visualization.py
+# ==========================================
+
+import tkinter as tk
+from tkinter import ttk, messagebox
+import sqlite3
+import matplotlib.pyplot as plt
+
+
+class VisualizationWindow:
+
+    def __init__(self, root):
+
+        self.window = tk.Toplevel(root)
+        self.window.title("PetCareAI Data Visualization")
+        self.window.geometry("600x450")
+        self.window.configure(bg="white")
+
+        title = tk.Label(
+            self.window,
+            text="PetCareAI Visualization Dashboard",
+            font=("Arial", 20, "bold"),
+            bg="#FF9800",
+            fg="white",
+            pady=10
+        )
+        title.pack(fill="x")
+
+        frame = tk.Frame(self.window, bg="white")
+        frame.pack(pady=30)
+
+        tk.Button(
+            frame,
+            text="Species Distribution",
+            width=25,
+            bg="#2196F3",
+            fg="white",
+            command=self.species_chart
+        ).grid(row=0, column=0, padx=10, pady=10)
+
+        tk.Button(
+            frame,
+            text="Gender Distribution",
+            width=25,
+            bg="#4CAF50",
+            fg="white",
+            command=self.gender_chart
+        ).grid(row=1, column=0, padx=10, pady=10)
+
+        tk.Button(
+            frame,
+            text="Activity Statistics",
+            width=25,
+            bg="#9C27B0",
+            fg="white",
+            command=self.activity_chart
+        ).grid(row=2, column=0, padx=10, pady=10)
+
+        tk.Button(
+            frame,
+            text="Nutrition Calories",
+            width=25,
+            bg="#FF5722",
+            fg="white",
+            command=self.nutrition_chart
+        ).grid(row=3, column=0, padx=10, pady=10)
+
+        tk.Button(
+            frame,
+            text="Weight Analysis",
+            width=25,
+            bg="#607D8B",
+            fg="white",
+            command=self.weight_chart
+        ).grid(row=4, column=0, padx=10, pady=10)
+
+    # =====================================
+    # Database Connection
+    # =====================================
+
+    def connect(self):
+        return sqlite3.connect("petcare.db")
+
+    # =====================================
+    # Species Chart
+    # =====================================
+
+    def species_chart(self):
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT species, COUNT(*)
+            FROM pets
+            GROUP BY species
+        """)
+
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            messagebox.showinfo("Info", "No pet data available.")
+            return
+
+        labels = [row[0] for row in data]
+        values = [row[1] for row in data]
+
+        plt.figure(figsize=(6,5))
+        plt.pie(values, labels=labels, autopct="%1.1f%%")
+        plt.title("Species Distribution")
+        plt.show()
+
+    # =====================================
+    # Gender Chart
+    # =====================================
+
+    def gender_chart(self):
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT gender, COUNT(*)
+            FROM pets
+            GROUP BY gender
+        """)
+
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            messagebox.showinfo("Info", "No data found.")
+            return
+
+        labels = [row[0] for row in data]
+        values = [row[1] for row in data]
+
+        plt.figure(figsize=(6,5))
+        plt.bar(labels, values)
+        plt.title("Gender Distribution")
+        plt.xlabel("Gender")
+        plt.ylabel("Number of Pets")
+        plt.show()
+
+    # =====================================
+    # Activity Chart
+    # =====================================
+
+    def activity_chart(self):
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT activity, COUNT(*)
+            FROM activity
+            GROUP BY activity
+        """)
+
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            messagebox.showinfo("Info", "No activity data.")
+            return
+
+        labels = [row[0] for row in data]
+        values = [row[1] for row in data]
+
+        plt.figure(figsize=(7,5))
+        plt.bar(labels, values)
+        plt.title("Pet Activity Statistics")
+        plt.xlabel("Activity")
+        plt.ylabel("Count")
+        plt.show()
+
+    # =====================================
+    # Nutrition Chart
+    # =====================================
+
+    def nutrition_chart(self):
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT pet_id, calories
+            FROM nutrition
+        """)
+
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            messagebox.showinfo("Info", "No nutrition records.")
+            return
+
+        pets = [str(row[0]) for row in data]
+        calories = [float(row[1]) for row in data]
+
+        plt.figure(figsize=(8,5))
+        plt.plot(pets, calories, marker="o")
+        plt.title("Nutrition Calories")
+        plt.xlabel("Pet ID")
+        plt.ylabel("Calories")
+        plt.grid(True)
+        plt.show()
+
+    # =====================================
+    # Weight Chart
+    # =====================================
+
+    def weight_chart(self):
+
+        conn = self.connect()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT name, weight
+            FROM pets
+        """)
+
+        data = cursor.fetchall()
+        conn.close()
+
+        if not data:
+            messagebox.showinfo("Info", "No pet records.")
+            return
+
+        names = [row[0] for row in data]
+        weights = [float(row[1]) for row in data]
+
+        plt.figure(figsize=(8,5))
+        plt.bar(names, weights)
+        plt.title("Pet Weight Analysis")
+        plt.xlabel("Pet Name")
+        plt.ylabel("Weight (kg)")
+        plt.show()
+
+
+# ======================================
+# Open Visualization Window
+# ======================================
+
+def open_visualization_window(root):
+    VisualizationWindow(root)
+
+
+# ======================================
+# Run Independently
+# ======================================
+
+if __name__ == "__main__":
+
+    root = tk.Tk()
+    root.withdraw()
+
+    VisualizationWindow(root)
+
+    root.mainloop()
